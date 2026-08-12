@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c0c12"/>
+      <stop offset="45%" stop-color="#14141c"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="45%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="purple" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <radialGradient id="goldAura" cx="58%" cy="48%" r="42%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.28"/>
+      <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#0c0c12" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="purpleAura" cx="72%" cy="52%" r="18%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="particleGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <rect width="1280" height="720" fill="url(#goldAura)"/>
+  <rect width="1280" height="720" fill="url(#purpleAura)"/>
+
+  <!-- Tech grid -->
+  <g opacity="0.08" stroke="#f59e0b" stroke-width="1">
+    <line x1="0" y1="0" x2="0" y2="720"/><line x1="80" y1="0" x2="80" y2="720"/><line x1="160" y1="0" x2="160" y2="720"/><line x1="240" y1="0" x2="240" y2="720"/><line x1="320" y1="0" x2="320" y2="720"/><line x1="400" y1="0" x2="400" y2="720"/><line x1="480" y1="0" x2="480" y2="720"/><line x1="560" y1="0" x2="560" y2="720"/><line x1="640" y1="0" x2="640" y2="720"/><line x1="720" y1="0" x2="720" y2="720"/><line x1="800" y1="0" x2="800" y2="720"/><line x1="880" y1="0" x2="880" y2="720"/><line x1="960" y1="0" x2="960" y2="720"/><line x1="1040" y1="0" x2="1040" y2="720"/><line x1="1120" y1="0" x2="1120" y2="720"/><line x1="1200" y1="0" x2="1200" y2="720"/><line x1="1280" y1="0" x2="1280" y2="720"/>
+    <line x1="0" y1="0" x2="1280" y2="0"/><line x1="0" y1="80" x2="1280" y2="80"/><line x1="0" y1="160" x2="1280" y2="160"/><line x1="0" y1="240" x2="1280" y2="240"/><line x1="0" y1="320" x2="1280" y2="320"/><line x1="0" y1="400" x2="1280" y2="400"/><line x1="0" y1="480" x2="1280" y2="480"/><line x1="0" y1="560" x2="1280" y2="560"/><line x1="0" y1="640" x2="1280" y2="640"/><line x1="0" y1="720" x2="1280" y2="720"/>
+  </g>
+
+  <!-- Particles -->
+  <g filter="url(#particleGlow)" opacity="0.85">
+    <circle cx="180" cy="120" r="2.5" fill="#fcd34d"/>
+    <circle cx="320" cy="580" r="2" fill="#f59e0b"/>
+    <circle cx="980" cy="140" r="2.2" fill="#fde68a"/>
+    <circle cx="1120" cy="420" r="1.8" fill="#d97706"/>
+    <circle cx="760" cy="620" r="2" fill="#fbbf24"/>
+    <circle cx="420" cy="180" r="1.5" fill="#a855f7" opacity="0.7"/>
+    <circle cx="880" cy="560" r="1.6" fill="#c084fc" opacity="0.6"/>
+  </g>
+
+  <!-- Ground shadow -->
+  <ellipse cx="720" cy="560" rx="220" ry="28" fill="#000" opacity="0.35"/>
+
+  <!-- Mount silhouette -->
+  <path d="M560 520 C600 470 680 455 760 468 C820 478 870 505 905 545 C860 555 790 562 720 558 C650 554 590 542 560 520 Z" fill="#111118"/>
+  <path d="M600 500 C640 480 690 475 735 482 L748 512 C700 520 650 522 600 500 Z" fill="#1a1a22" opacity="0.9"/>
+
+  <!-- Wings -->
+  <path d="M620 280 C540 220 460 230 410 290 C450 275 520 268 580 278 L620 310 Z" fill="#08080d" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.35"/>
+  <path d="M620 280 C540 240 470 255 430 310 C465 295 530 285 585 295 L620 320 Z" fill="#0f0f16" opacity="0.85"/>
+  <path d="M820 280 C900 220 980 230 1030 290 C990 275 920 268 860 278 L820 310 Z" fill="#08080d" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.35"/>
+  <path d="M820 280 C900 240 970 255 1010 310 C975 295 910 285 855 295 L820 320 Z" fill="#0f0f16" opacity="0.85"/>
+
+  <!-- Warrior body -->
+  <path d="M660 300 L780 300 L792 360 L776 430 L664 430 L648 360 Z" fill="#15151d" stroke="url(#gold)" stroke-width="3"/>
+  <path d="M672 320 L768 320 L760 350 L680 350 Z" fill="#1f1f28"/>
+  <path d="M680 360 L760 360 L752 400 L688 400 Z" fill="url(#gold)" opacity="0.75"/>
+  <path d="M692 410 L748 410 L740 430 L700 430 Z" fill="#d97706" opacity="0.8"/>
+
+  <!-- Helmet -->
+  <path d="M680 250 L760 250 L752 300 L688 300 Z" fill="#12121a" stroke="url(#gold)" stroke-width="2.5"/>
+  <path d="M700 238 L740 238 L736 252 L704 252 Z" fill="url(#gold)"/>
+  <rect x="714" y="268" width="12" height="8" rx="2" fill="#fcd34d" filter="url(#softGlow)"/>
+
+  <!-- Shoulder pads -->
+  <path d="M648 310 C630 295 615 305 610 325 C625 330 640 328 648 320 Z" fill="url(#gold)" opacity="0.85"/>
+  <path d="M792 310 C810 295 825 305 830 325 C815 330 800 328 792 320 Z" fill="url(#gold)" opacity="0.85"/>
+
+  <!-- Purple energy sword -->
+  <path d="M800 320 L1040 210 L1055 228 L815 345 Z" fill="url(#purple)" filter="url(#softGlow)" opacity="0.95"/>
+  <path d="M800 320 L815 345 L808 352 L792 335 Z" fill="#7c3aed"/>
+  <path d="M1035 215 L1055 228 L1048 235 L1028 222 Z" fill="#e9d5ff" opacity="0.9"/>
+
+  <!-- Shield emblem -->
+  <circle cx="720" cy="372" r="22" fill="#0f0f14" stroke="url(#gold)" stroke-width="2"/>
+  <path d="M710 372 L720 358 L730 372 L720 386 Z" fill="url(#gold)"/>
+
+  <!-- HUD accent lines -->
+  <path d="M80 620 H420" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.25" stroke-linecap="round"/>
+  <path d="M860 100 H1180" stroke="#a855f7" stroke-width="2" stroke-opacity="0.2" stroke-linecap="round"/>
+  <rect x="80" y="88" width="120" height="4" rx="2" fill="#f59e0b" opacity="0.35"/>
+  <rect x="1080" y="600" width="100" height="4" rx="2" fill="#a855f7" opacity="0.3"/>
+</svg>

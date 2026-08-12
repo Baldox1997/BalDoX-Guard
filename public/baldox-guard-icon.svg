@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="purple" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#0f0f14" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glowFilter" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="#0f0f14"/>
+  <rect x="2" y="2" width="508" height="508" rx="94" stroke="url(#gold)" stroke-width="3" stroke-opacity="0.55"/>
+  <circle cx="256" cy="240" r="180" fill="url(#glow)"/>
+
+  <!-- Helmet silhouette -->
+  <path d="M176 220 C176 160 212 120 256 120 C300 120 336 160 336 220 L336 280 C336 310 300 340 256 340 C212 340 176 310 176 280 Z"
+        fill="#12121a" stroke="url(#gold)" stroke-width="6" filter="url(#glowFilter)"/>
+  <path d="M196 220 C196 175 222 145 256 145 C290 145 316 175 316 220 L316 268 C316 292 290 312 256 312 C222 312 196 292 196 268 Z"
+        fill="#1a1a22"/>
+
+  <!-- Visor -->
+  <rect x="214" y="210" width="84" height="28" rx="8" fill="#0a0a0f" stroke="url(#purple)" stroke-width="3"/>
+  <rect x="228" y="218" width="56" height="12" rx="4" fill="url(#purple)" opacity="0.85"/>
+
+  <!-- Crest -->
+  <path d="M236 120 L256 88 L276 120 L268 132 L244 132 Z" fill="url(#gold)"/>
+
+  <!-- Cheek guards -->
+  <path d="M176 248 L196 240 L196 290 L180 298 Z" fill="url(#gold)" opacity="0.7"/>
+  <path d="M336 248 L316 240 L316 290 L332 298 Z" fill="url(#gold)" opacity="0.7"/>
+
+  <!-- Bottom accent -->
+  <path d="M196 340 H316" stroke="url(#gold)" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="256" cy="380" r="6" fill="#a855f7" filter="url(#glowFilter)"/>
+</svg>

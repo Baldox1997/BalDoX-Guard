@@ -1,0 +1,263 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-surface: #fafafa;
+  --color-surface-elevated: #ffffff;
+  --color-surface-muted: #f4f4f5;
+  --color-border: #e4e4e7;
+  --color-text-primary: #18181b;
+  --color-text-secondary: #71717a;
+  --color-primary: #d97706;
+  --color-primary-hover: #b45309;
+  --color-primary-muted: #fef3c7;
+  --color-accent: #a855f7;
+  --color-accent-hover: #9333ea;
+  --color-accent-muted: #f3e8ff;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-warrior-panel: #fafafa;
+  --color-warrior-panel-border: rgba(217, 119, 6, 0.22);
+}
+
+.dark {
+  --color-surface: #0f0f14;
+  --color-surface-elevated: #16161e;
+  --color-surface-muted: #1e1e28;
+  --color-border: rgba(245, 158, 11, 0.18);
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-primary: #f59e0b;
+  --color-primary-hover: #d97706;
+  --color-primary-muted: rgba(245, 158, 11, 0.12);
+  --color-accent: #a855f7;
+  --color-accent-hover: #9333ea;
+  --color-accent-muted: rgba(168, 85, 247, 0.12);
+  --color-warrior-panel: #12121a;
+  --color-warrior-panel-border: rgba(245, 158, 11, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Warrior panel gradients */
+.warrior-panel {
+  background: linear-gradient(
+    165deg,
+    var(--color-warrior-panel) 0%,
+    var(--color-surface-elevated) 55%,
+    var(--color-surface-muted) 100%
+  );
+  border-color: var(--color-warrior-panel-border);
+}
+
+.warrior-header {
+  background: linear-gradient(
+    180deg,
+    var(--color-surface-elevated) 0%,
+    var(--color-surface) 100%
+  );
+  border-bottom: 1px solid var(--color-warrior-panel-border);
+  box-shadow: inset 0 -2px 0 rgba(245, 158, 11, 0.35);
+}
+
+.hero-warrior-card {
+  background: linear-gradient(
+    135deg,
+    var(--color-surface-elevated) 0%,
+    var(--color-primary-muted) 45%,
+    var(--color-accent-muted) 100%
+  );
+  border: 1px solid var(--color-warrior-panel-border);
+}
+
+.dark .hero-warrior-card {
+  background: linear-gradient(
+    135deg,
+    #16161e 0%,
+    rgba(245, 158, 11, 0.08) 40%,
+    rgba(168, 85, 247, 0.06) 100%
+  );
+}
+
+/* BalDoX avatar animations */
+@keyframes baldox-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.01);
+  }
+}
+
+@keyframes baldox-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes baldox-scan-sweep {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(56px);
+    opacity: 0;
+  }
+}
+
+@keyframes baldox-core-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    r: 4;
+  }
+  50% {
+    opacity: 1;
+    r: 5;
+  }
+}
+
+@keyframes baldox-antenna-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes baldox-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-2deg);
+  }
+  75% {
+    transform: rotate(2deg);
+  }
+}
+
+.baldox-ring-idle {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.28) 0%, transparent 70%);
+  animation: baldox-glow-pulse 4s ease-in-out infinite;
+}
+
+.baldox-ring-thinking {
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 70%);
+  animation: baldox-glow-pulse 1.2s ease-in-out infinite;
+}
+
+.baldox-ring-scanning {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, transparent 70%);
+  animation: baldox-glow-pulse 1.5s ease-in-out infinite;
+}
+
+.baldox-ring-organizing {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.38) 0%, transparent 70%);
+  animation: baldox-glow-pulse 1.8s ease-in-out infinite;
+}
+
+.baldox-ring-success {
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.35) 0%, transparent 70%);
+  opacity: 0.7;
+}
+
+.baldox-ring-warning {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.4) 0%, transparent 70%);
+  animation: baldox-glow-pulse 1s ease-in-out infinite;
+}
+
+.baldox-body-idle {
+  animation: baldox-breathe 4s ease-in-out infinite;
+}
+
+.baldox-body-thinking {
+  animation: baldox-breathe 1.5s ease-in-out infinite;
+}
+
+.baldox-body-thinking .baldox-core,
+.baldox-body-thinking .baldox-core-dot {
+  animation: baldox-antenna-blink 0.8s ease-in-out infinite;
+}
+
+.baldox-body-scanning {
+  animation: baldox-breathe 2s ease-in-out infinite;
+}
+
+.baldox-body-scanning .baldox-scan-line {
+  opacity: 1;
+  animation: baldox-scan-sweep 2s linear infinite;
+}
+
+.baldox-body-scanning .baldox-antenna circle {
+  animation: baldox-antenna-blink 0.6s ease-in-out infinite;
+}
+
+.baldox-body-organizing {
+  animation: baldox-sway 2.5s ease-in-out infinite;
+}
+
+.baldox-body-success .baldox-core-dot {
+  fill: #22c55e;
+}
+
+.baldox-body-warning .baldox-mouth {
+  fill: #f59e0b;
+}

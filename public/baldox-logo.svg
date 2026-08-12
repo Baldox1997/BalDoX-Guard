@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="BalDoX Guard">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fcd34d"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="purple-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e9d5ff"/>
+      <stop offset="50%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0f0f14" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background shield -->
+  <rect width="128" height="128" rx="24" fill="#0f0f14"/>
+  <rect x="1" y="1" width="126" height="126" rx="23" stroke="url(#gold)" stroke-width="1.5" stroke-opacity="0.55"/>
+  <circle cx="64" cy="58" r="46" fill="url(#aura)"/>
+
+  <!-- Mount / beast body -->
+  <path d="M22 88 C28 78 38 74 48 76 L52 82 C44 86 34 92 24 96 Z" fill="#1a1a22"/>
+  <path d="M48 76 C58 70 72 68 84 72 L88 80 C76 84 62 88 52 82 Z" fill="#121218"/>
+  <path d="M84 72 C92 68 102 70 108 78 L104 88 C96 84 90 82 88 80 Z" fill="#1a1a22"/>
+
+  <!-- Wings -->
+  <path d="M52 38 C38 28 24 32 18 48 C26 44 38 42 48 46 Z" fill="#0a0a0f" stroke="#f59e0b" stroke-width="0.8" stroke-opacity="0.5"/>
+  <path d="M76 38 C90 28 104 32 110 48 C102 44 90 42 80 46 Z" fill="#0a0a0f" stroke="#f59e0b" stroke-width="0.8" stroke-opacity="0.5"/>
+
+  <!-- Warrior torso & helmet -->
+  <path d="M54 44 L74 44 L76 58 L72 68 L56 68 L52 58 Z" fill="#121218" stroke="url(#gold)" stroke-width="1.2"/>
+  <path d="M58 40 L70 40 L68 46 L60 46 Z" fill="url(#gold)" opacity="0.9"/>
+  <circle cx="64" cy="52" r="3" fill="#fcd34d" filter="url(#glow)"/>
+
+  <!-- Purple weapon / digital blade -->
+  <path d="M78 48 L106 32 L108 36 L82 54 Z" fill="url(#purple-glow)" filter="url(#glow)"/>
+  <path d="M78 48 L82 54 L80 56 L76 50 Z" fill="#7c3aed"/>
+
+  <!-- Gold armor accents -->
+  <path d="M56 58 L72 58 L70 64 L58 64 Z" fill="#d97706" opacity="0.75"/>
+  <path d="M40 82 L48 76 L52 82 L44 88 Z" fill="#f59e0b" opacity="0.4"/>
+  <path d="M88 80 L96 74 L100 80 L92 86 Z" fill="#f59e0b" opacity="0.4"/>
+
+  <!-- Ground line -->
+  <path d="M16 98 H112" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.25" stroke-linecap="round"/>
+</svg>
