@@ -144,6 +144,18 @@ export interface AppSettings {
   last_baldox_commands: string[];
   baldox_ai_mode: string;
   baldox_openai_key: string;
+  baldox_llm_model: string;
+  baldox_llm_base_url: string;
+  baldox_ollama_url: string;
+  baldox_ollama_model: string;
+  baldox_secretary_active: boolean;
+  baldox_monitor_interval_min: number;
+  baldox_minimize_to_tray: boolean;
+  baldox_voice_input: boolean;
+  baldox_voice_output: boolean;
+  baldox_voice_continuous: boolean;
+  baldox_desktop_companion: boolean;
+  baldox_companion_speed: number;
 }
 
 export interface StorageInfo {

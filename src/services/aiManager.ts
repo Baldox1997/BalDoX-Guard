@@ -576,7 +576,8 @@ export function getPersonalityResponse(
     DUPLICATES: "Caçando clones de arquivos — cada byte duplicado será exposto.",
     QUARANTINE: "Consultando a câmara de quarentena.",
     NAVIGATE: "Abrindo canal tático solicitado.",
-    GENERAL_HELP: "Comandante, sou BalDoX — escaneio, busco, limpo, organizo e diagnostico seu PC. Dê a ordem.",
+    GENERAL_HELP:
+      "Comandante, sou BalDoX Local — inteligente no seu PC. Escaneio, busco, limpo, organizo e diagnostico. Posso manter temp e alertas sozinho; qualquer outra ação preciso da sua confirmação.",
     UNKNOWN: "Comandante, não decifrei sua ordem. Reformule ou escolha uma sugestão abaixo.",
   };
 
@@ -591,7 +592,8 @@ export function getPersonalityResponse(
     DUPLICATES: "Hora de achar arquivos duplicados!",
     QUARANTINE: "Vou mostrar o que está na quarentena.",
     NAVIGATE: "Te levo lá agora!",
-    GENERAL_HELP: "Oi! Posso escanear, buscar arquivos, limpar, organizar e muito mais. O que precisa?",
+    GENERAL_HELP:
+      "Oi! Sou o BalDoX Local — inteligente no seu PC. Posso cuidar de temp e alertas sozinho; para limpar, mover ou organizar arquivos, sempre pergunto antes. O que precisa?",
     UNKNOWN: "Hmm, não entendi. Pode reformular?",
   };
 
@@ -605,19 +607,41 @@ export function getPersonalityResponse(
   return base;
 }
 
+/** Comandos permitidos para execução autônoma em background (Tier 1). */
+export const AUTONOMOUS_BACKGROUND_COMMANDS = new Set(["auto_clean_temp", "auto_clean_temp_safe"]);
+
+/**
+ * Autonomia BalDoX — regras de execução sem confirmação do usuário.
+ *
+ * - **Chat:** NUNCA auto-executa. Usuário deve clicar [Sim, executar] ou dizer "confirmo".
+ * - **Background (secretary):** apenas `auto_clean_temp` em caminhos seguros (SafetyManager),
+ *   quando `auto_clean_temp` + `baldox_secretary_active` estão habilitados.
+ * - **Proibido autonomamente:** delete, mover, organizar, quarentena, uninstall, caminhos protegidos.
+ */
 export function canAutoExecute(
   tier: AutonomyTier,
-  settings: { auto_clean_temp: boolean },
+  settings: { auto_clean_temp: boolean; baldox_secretary_active?: boolean },
   intent: BalDoXIntent,
   plan: BalDoXPlan,
+  fromChat = true,
 ): boolean {
-  if (tier === "blocked") return false;
-  if (tier === "review") return false;
-  if (intent === "CLEANUP" && plan.steps.some((s) => s.command === "auto_clean_temp") && settings.auto_clean_temp) {
+  if (fromChat) return false;
+
+  if (tier === "blocked" || tier === "review") return false;
+  if (!settings.baldox_secretary_active) return false;
+
+  const onlyAutonomousSteps = plan.steps.every(
+    (s) => !s.command || AUTONOMOUS_BACKGROUND_COMMANDS.has(s.command),
+  );
+  if (
+    intent === "CLEANUP" &&
+    onlyAutonomousSteps &&
+    settings.auto_clean_temp
+  ) {
     return true;
   }
-  if (intent === "NAVIGATE" || intent === "GENERAL_HELP") return true;
-  return tier === "safe" && plan.steps.every((s) => s.tier === "safe");
+
+  return false;
 }
 
 export async function tryOpenAiIntent(
@@ -671,4 +695,153 @@ export async function tryOpenAiIntent(
 /** @deprecated use buildActionPlan */
 export function buildPlan(intent: BalDoXIntent, userInput: string): BalDoXPlan {
   return buildActionPlan(intent, userInput, extractEntities(userInput));
+}
+
+export interface InterpretationResult {
+  intent: BalDoXIntent;
+  confidence: number;
+  entities: ParsedEntities;
+  reply: string;
+  suggestedActions: { label: string; intent: string }[];
+  isGeneralQuestion: boolean;
+  source: "llm" | "local_llm" | "local";
+}
+
+const PROGRAMMING_KEYWORDS = [
+  "código", "codigo", "programar", "programação", "programacao", "bug", "debug",
+  "python", "javascript", "typescript", "rust", "react", "função", "funcao",
+];
+
+function isProgrammingQuestion(input: string): boolean {
+  const lower = input.toLowerCase();
+  return PROGRAMMING_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+function getProgrammingFallbackReply(personality: string): string {
+  if (personality === "friendly") {
+    return "Para ajuda com código de verdade, instale o Ollama (ollama.com) e ative **Modo IA: Local LLM (Ollama)** nas configurações. Baixe um modelo como `llama3.2` ou `qwen2.5-coder` com `ollama pull llama3.2`. Enquanto isso, posso escanear, limpar e organizar seu PC!";
+  }
+  return "Comandante, para programação e debug avançado, recomendo o Ollama local (ollama.com). Ative **Local LLM (Ollama)** em Configurações e baixe um modelo: `ollama pull llama3.2` ou `qwen2.5-coder`. Posso continuar gerenciando seu PC com regras locais.";
+}
+
+/** Pipeline unificado: Ollama local → OpenAI online → fallback rule-based local. */
+export async function interpretMessage(
+  input: string,
+  options: {
+    apiKey: string;
+    aiMode: string;
+    personality: string;
+    knowledge?: BalDoXKnowledge;
+    contextIntent?: BalDoXIntent | null;
+    onReplyToken?: (partial: string) => void;
+    llmModel?: string;
+    llmBaseUrl?: string;
+    ollamaUrl?: string;
+    ollamaModel?: string;
+  },
+): Promise<InterpretationResult> {
+  const { chatWithLLM, chatWithLocalLLM, isLLMAvailable, isLocalLLMAvailable, mergeEntities, streamTextToCallback } =
+    await import("./llmService");
+
+  const localResult = parseIntent(input, options.contextIntent);
+  let localReply = getPersonalityResponse(
+    localResult.intent,
+    options.personality,
+    options.knowledge,
+  );
+
+  if (localResult.intent === "UNKNOWN" && isProgrammingQuestion(input)) {
+    localReply = getProgrammingFallbackReply(options.personality);
+  }
+
+  if (isLocalLLMAvailable(options.aiMode)) {
+    try {
+      const llm = await chatWithLocalLLM(input, {
+        ollamaUrl: options.ollamaUrl,
+        model: options.ollamaModel,
+        personality: options.personality,
+        knowledge: options.knowledge,
+        contextIntent: options.contextIntent,
+      });
+
+      if (llm) {
+        const entities = mergeEntities(localResult.entities, llm.entities);
+        if (options.onReplyToken) {
+          await streamTextToCallback(llm.reply, options.onReplyToken);
+        }
+        return {
+          intent: llm.intent,
+          confidence: llm.confidence,
+          entities,
+          reply: llm.reply,
+          suggestedActions: llm.suggestedActions,
+          isGeneralQuestion: llm.isGeneralQuestion,
+          source: "local_llm",
+        };
+      }
+    } catch {
+      /* fallback abaixo */
+    }
+
+    return {
+      intent: localResult.intent,
+      confidence: localResult.confidence,
+      entities: localResult.entities,
+      reply: `${localReply}\n\n(Ollama não respondeu — verifique se está rodando e se o modelo está instalado.)`,
+      suggestedActions: [],
+      isGeneralQuestion: localResult.intent === "GENERAL_HELP" || isProgrammingQuestion(input),
+      source: "local",
+    };
+  }
+
+  if (!isLLMAvailable(options.apiKey, options.aiMode)) {
+    return {
+      intent: localResult.intent,
+      confidence: localResult.confidence,
+      entities: localResult.entities,
+      reply: localReply,
+      suggestedActions: [],
+      isGeneralQuestion: localResult.intent === "GENERAL_HELP",
+      source: "local",
+    };
+  }
+
+  try {
+    const llm = await chatWithLLM(input, {
+      apiKey: options.apiKey,
+      baseUrl: options.llmBaseUrl,
+      model: options.llmModel,
+      personality: options.personality,
+      knowledge: options.knowledge,
+      contextIntent: options.contextIntent,
+    });
+
+    if (llm) {
+      const entities = mergeEntities(localResult.entities, llm.entities);
+      if (options.onReplyToken) {
+        await streamTextToCallback(llm.reply, options.onReplyToken);
+      }
+      return {
+        intent: llm.intent,
+        confidence: llm.confidence,
+        entities,
+        reply: llm.reply,
+        suggestedActions: llm.suggestedActions,
+        isGeneralQuestion: llm.isGeneralQuestion,
+        source: "llm",
+      };
+    }
+  } catch {
+    /* fallback abaixo */
+  }
+
+  return {
+    intent: localResult.intent,
+    confidence: localResult.confidence,
+    entities: localResult.entities,
+    reply: localReply,
+    suggestedActions: [],
+    isGeneralQuestion: localResult.intent === "GENERAL_HELP",
+    source: "local",
+  };
 }

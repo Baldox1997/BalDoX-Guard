@@ -261,3 +261,22 @@ body {
 .baldox-body-warning .baldox-mouth {
   fill: #f59e0b;
 }
+
+.baldox-ring-walking {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.32) 0%, transparent 70%);
+  animation: baldox-glow-pulse 2s ease-in-out infinite;
+}
+
+.baldox-body-walking {
+  animation: baldox-breathe 1.2s ease-in-out infinite;
+}
+
+html.companion-window,
+body.companion-window {
+  background: transparent !important;
+  overflow: hidden;
+}
+
+.companion-root {
+  background: transparent;
+}

@@ -19,6 +19,9 @@ export function BalDoXPlanCard({ plan, onApply, onReview, onCancel }: BalDoXPlan
 
   return (
     <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 p-4">
+      <p className="mb-3 text-xs font-medium text-cyan-700 dark:text-cyan-300">
+        Quer que eu faça isso?
+      </p>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-text-primary">{plan.title}</h3>
@@ -53,7 +56,7 @@ export function BalDoXPlanCard({ plan, onApply, onReview, onCancel }: BalDoXPlan
               className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover"
             >
               <Check className="h-3.5 w-3.5" />
-              Aplicar
+              Sim, executar
             </button>
             <button
               type="button"

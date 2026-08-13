@@ -1,5 +1,5 @@
 import type { BalDoXAnimationState } from "../constants/assistant";
-import type { BalDoXContext, BalDoXIntent, BalDoXMessage, BalDoXPlan } from "../types/baldox";
+import type { AiConnectionMode, BalDoXContext, BalDoXIntent, BalDoXMessage, BalDoXPlan } from "../types/baldox";
 import { api } from "../services/apiService";
 
 type Listener = () => void;
@@ -13,6 +13,8 @@ interface BalDoXState {
   context: BalDoXContext;
   navigateTo: string | null;
   historyLoaded: boolean;
+  aiConnectionMode: AiConnectionMode;
+  secretaryActive: boolean;
 }
 
 const defaultContext: BalDoXContext = {
@@ -32,6 +34,8 @@ const state: BalDoXState = {
   context: { ...defaultContext },
   navigateTo: null,
   historyLoaded: false,
+  aiConnectionMode: "local",
+  secretaryActive: true,
 };
 
 const listeners = new Set<Listener>();
@@ -194,5 +198,21 @@ export function addTypingIndicator(): string {
 
 export function removeTypingIndicator(id: string) {
   state.messages = state.messages.filter((m) => m.id !== id);
+  emit();
+}
+
+export function updateMessageContent(id: string, content: string) {
+  state.messages = state.messages.map((m) => (m.id === id ? { ...m, content } : m));
+  emit();
+}
+
+export function setAiConnectionMode(mode: AiConnectionMode) {
+  state.aiConnectionMode = mode;
+  emit();
+}
+
+export function setSecretaryActive(active: boolean) {
+  state.secretaryActive = active;
+  state.animationState = active && state.animationState === "idle" ? "idle" : state.animationState;
   emit();
 }

@@ -8,10 +8,13 @@ interface BalDoXAvatarProps {
   state?: BalDoXAnimationState;
   className?: string;
   size?: "sm" | "lg";
+  variant?: "default" | "companion";
+  walkDirection?: 1 | -1;
 }
 
 const STATE_RING: Record<BalDoXAnimationState, string> = {
   idle: "baldox-ring-idle",
+  walking: "baldox-ring-walking",
   thinking: "baldox-ring-thinking",
   scanning: "baldox-ring-scanning",
   organizing: "baldox-ring-organizing",
@@ -21,6 +24,7 @@ const STATE_RING: Record<BalDoXAnimationState, string> = {
 
 const STATE_BODY: Record<BalDoXAnimationState, string> = {
   idle: "baldox-body-idle",
+  walking: "baldox-body-walking",
   thinking: "baldox-body-thinking",
   scanning: "baldox-body-scanning",
   organizing: "baldox-body-organizing",
@@ -160,9 +164,13 @@ function GroundStage() {
 function BalDoXAvatarCanvas({
   state = "idle",
   size = "lg",
+  walkDirection = 1,
+  showStage = true,
 }: {
   state?: BalDoXAnimationState;
   size?: "sm" | "lg";
+  walkDirection?: 1 | -1;
+  showStage?: boolean;
 }) {
   const preset = SIZE_PRESETS[size];
 
@@ -182,39 +190,62 @@ function BalDoXAvatarCanvas({
       <SceneLighting size={size} />
       <Suspense fallback={null}>
         <group scale={preset.scale} position={[0, -0.06, 0]}>
-          <BalDoXCharacter3D state={state} />
+          <BalDoXCharacter3D state={state} walkDirection={walkDirection} />
         </group>
-        <GroundStage />
-        <ContactShadows
-          position={[0, -0.47, 0]}
-          opacity={0.35}
-          scale={2.4}
-          blur={2.2}
-          far={1.2}
-          color="#2dd4a8"
-        />
+        {showStage && (
+          <>
+            <GroundStage />
+            <ContactShadows
+              position={[0, -0.47, 0]}
+              opacity={0.35}
+              scale={2.4}
+              blur={2.2}
+              far={1.2}
+              color="#2dd4a8"
+            />
+          </>
+        )}
       </Suspense>
     </Canvas>
   );
 }
 
-export function BalDoXAvatar({ state = "idle", className = "", size = "lg" }: BalDoXAvatarProps) {
+export function BalDoXAvatar({
+  state = "idle",
+  className = "",
+  size = "lg",
+  variant = "default",
+  walkDirection = 1,
+}: BalDoXAvatarProps) {
+  const isCompanion = variant === "companion";
+
   return (
     <div
       className={`relative flex items-center justify-center overflow-visible ${className}`}
       aria-label={`BalDoX — estado ${state}`}
       role="img"
     >
-      <div
-        className={`absolute -inset-3 rounded-full blur-2xl transition-opacity duration-500 ${STATE_RING[state]}`}
-        aria-hidden
-      />
+      {!isCompanion && (
+        <div
+          className={`absolute -inset-3 rounded-full blur-2xl transition-opacity duration-500 ${STATE_RING[state]}`}
+          aria-hidden
+        />
+      )}
 
       <div
-        className={`relative h-full w-full overflow-visible rounded-2xl bg-gradient-to-b from-slate-900/90 via-teal-950/50 to-slate-950/95 ring-1 ring-cyan-500/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${STATE_BODY[state]}`}
+        className={
+          isCompanion
+            ? `relative h-full w-full overflow-visible ${STATE_BODY[state]}`
+            : `relative h-full w-full overflow-visible rounded-2xl bg-gradient-to-b from-slate-900/90 via-teal-950/50 to-slate-950/95 ring-1 ring-cyan-500/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${STATE_BODY[state]}`
+        }
       >
         <Suspense fallback={<BalDoXAvatarSVG state={state} className="h-full w-full" />}>
-          <BalDoXAvatarCanvas state={state} size={size} />
+          <BalDoXAvatarCanvas
+            state={state}
+            size={size}
+            walkDirection={walkDirection}
+            showStage={!isCompanion}
+          />
         </Suspense>
       </div>
     </div>

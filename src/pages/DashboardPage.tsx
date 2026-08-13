@@ -16,7 +16,7 @@ import { processBalDoXMessage } from "../services/baldoxAgent";
 
 import { initGreeting } from "../stores/baldoxStore";
 
-import { getProactiveGreeting, startBackgroundMonitoring } from "../services/automationService";
+import { getProactiveGreeting } from "../services/automationService";
 
 import { api } from "../services/apiService";
 
@@ -71,8 +71,6 @@ export function DashboardPage() {
 
 
     api.getSettings().then((s) => {
-
-      startBackgroundMonitoring(s);
 
       if (s.baldox_proactive_greeting) {
 

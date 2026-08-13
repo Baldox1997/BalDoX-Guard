@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "BalDoX Guard — Seu Guardião Digital",
         "width": 1280,
         "height": 800,
@@ -19,6 +20,20 @@
         "minHeight": 640,
         "center": true,
         "resizable": true
+      },
+      {
+        "label": "companion",
+        "title": "BalDoX Companion",
+        "url": "/companion",
+        "width": 140,
+        "height": 200,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "visible": false,
+        "shadow": false
       }
     ],
     "security": {

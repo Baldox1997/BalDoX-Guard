@@ -123,3 +123,38 @@ export interface ChatHistoryRow {
   metadata: string | null;
   created_at: string;
 }
+
+export type AiConnectionMode = "online" | "offline" | "local" | "local_llm";
+
+export interface BalDoXSuggestedAction {
+  label: string;
+  intent: string;
+}
+
+export interface BalDoXLLMResponse {
+  reply: string;
+  intent: BalDoXIntent;
+  confidence: number;
+  entities: Partial<ParsedEntities>;
+  suggestedActions: BalDoXSuggestedAction[];
+  isGeneralQuestion: boolean;
+}
+
+export interface LLMChatOptions {
+  apiKey: string;
+  baseUrl?: string;
+  model?: string;
+  personality?: string;
+  knowledge?: BalDoXKnowledge;
+  contextIntent?: BalDoXIntent | null;
+  onToken?: (token: string) => void;
+}
+
+export interface LocalLLMChatOptions {
+  ollamaUrl?: string;
+  model?: string;
+  personality?: string;
+  knowledge?: BalDoXKnowledge;
+  contextIntent?: BalDoXIntent | null;
+  codingMode?: boolean;
+}

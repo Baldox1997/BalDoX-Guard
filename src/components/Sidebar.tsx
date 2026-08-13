@@ -1,8 +1,20 @@
 import { NavLink } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Activity } from "lucide-react";
 import { BRAND_ICON_IMAGE, PRODUCT_NAME, PRODUCT_SUBTITLE, TAGLINE } from "../constants/brand";
 import { NAV_ITEMS } from "../types/navigation";
+import { getBalDoXState, subscribeBalDoX } from "../stores/baldoxStore";
+import { refreshAiConnectionStatus } from "../services/baldoxAgent";
 
 export function Sidebar() {
+  const [secretaryActive, setSecretaryActive] = useState(getBalDoXState().secretaryActive);
+
+  useEffect(() => {
+    void refreshAiConnectionStatus();
+    const unsub = subscribeBalDoX(() => setSecretaryActive(getBalDoXState().secretaryActive));
+    return () => { unsub(); };
+  }, []);
+
   return (
     <aside className="warrior-panel flex h-full w-64 shrink-0 flex-col border-r">
       <div className="flex items-center gap-3 border-b border-border px-5 py-5">
@@ -43,7 +55,15 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <div className="border-t border-border px-5 py-4">
+      <div className="border-t border-border px-5 py-4 space-y-2">
+        {secretaryActive && (
+          <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/5 px-2.5 py-2">
+            <Activity className="h-3 w-3 shrink-0 animate-pulse text-green-500" />
+            <p className="text-[10px] leading-tight text-green-700 dark:text-green-400">
+              BalDoX ativo — monitorando (modo seguro)
+            </p>
+          </div>
+        )}
         <p className="text-xs text-text-secondary">{TAGLINE}</p>
       </div>
     </aside>

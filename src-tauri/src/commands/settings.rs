@@ -21,10 +21,63 @@ pub struct AppSettings {
     pub favorite_folders: Vec<String>,
     pub last_baldox_commands: Vec<String>,
     pub baldox_ai_mode: String,
+    #[serde(default)]
     pub baldox_openai_key: String,
+    #[serde(default = "default_llm_model")]
+    pub baldox_llm_model: String,
+    #[serde(default = "default_llm_base_url")]
+    pub baldox_llm_base_url: String,
+    #[serde(default = "default_ollama_url")]
+    pub baldox_ollama_url: String,
+    #[serde(default = "default_ollama_model")]
+    pub baldox_ollama_model: String,
+    #[serde(default = "default_true")]
+    pub baldox_secretary_active: bool,
+    #[serde(default = "default_monitor_interval")]
+    pub baldox_monitor_interval_min: u32,
+    #[serde(default = "default_true")]
+    pub baldox_minimize_to_tray: bool,
+    #[serde(default)]
+    pub baldox_voice_input: bool,
+    #[serde(default)]
+    pub baldox_voice_output: bool,
+    #[serde(default)]
+    pub baldox_voice_continuous: bool,
+    #[serde(default)]
+    pub baldox_desktop_companion: bool,
+    #[serde(default = "default_companion_speed")]
+    pub baldox_companion_speed: f64,
 }
 
 const SETTINGS_KEY: &str = "app_settings";
+
+fn default_llm_model() -> String {
+    "gpt-4o-mini".to_string()
+}
+
+fn default_llm_base_url() -> String {
+    "https://api.openai.com/v1".to_string()
+}
+
+fn default_ollama_url() -> String {
+    "http://127.0.0.1:11434".to_string()
+}
+
+fn default_ollama_model() -> String {
+    "llama3.2".to_string()
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_monitor_interval() -> u32 {
+    10
+}
+
+fn default_companion_speed() -> f64 {
+    80.0
+}
 
 #[tauri::command]
 pub fn get_settings(db: State<'_, Arc<Mutex<Database>>>) -> Result<AppSettings, String> {
@@ -95,5 +148,17 @@ fn default_settings() -> AppSettings {
         last_baldox_commands: vec![],
         baldox_ai_mode: "local".to_string(),
         baldox_openai_key: String::new(),
+        baldox_llm_model: "gpt-4o-mini".to_string(),
+        baldox_llm_base_url: "https://api.openai.com/v1".to_string(),
+        baldox_ollama_url: "http://127.0.0.1:11434".to_string(),
+        baldox_ollama_model: "llama3.2".to_string(),
+        baldox_secretary_active: true,
+        baldox_monitor_interval_min: 10,
+        baldox_minimize_to_tray: true,
+        baldox_voice_input: false,
+        baldox_voice_output: false,
+        baldox_voice_continuous: false,
+        baldox_desktop_companion: false,
+        baldox_companion_speed: 80.0,
     }
 }

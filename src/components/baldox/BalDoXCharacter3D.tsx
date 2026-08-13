@@ -5,6 +5,7 @@ import type { BalDoXAnimationState } from "../../constants/assistant";
 
 interface BalDoXCharacter3DProps {
   state?: BalDoXAnimationState;
+  walkDirection?: 1 | -1;
 }
 
 const ARMOR = "#1a1a22";
@@ -18,6 +19,7 @@ const LERP = 0.06;
 
 const STATE_SPEED: Record<BalDoXAnimationState, number> = {
   idle: 1,
+  walking: 2.2,
   thinking: 1.4,
   scanning: 1.6,
   organizing: 1.2,
@@ -27,6 +29,7 @@ const STATE_SPEED: Record<BalDoXAnimationState, number> = {
 
 const STATE_GLOW: Record<BalDoXAnimationState, number> = {
   idle: 0.42,
+  walking: 0.48,
   thinking: 0.72,
   scanning: 0.62,
   organizing: 0.52,
@@ -177,6 +180,23 @@ function getPoseTargets(state: BalDoXAnimationState): PoseTargets {
         wingSpread: 0.45,
         wingFlapAmp: 0.22,
         glowMul: 0.7,
+      };
+    case "walking":
+      return {
+        ...base,
+        bodyRotX: 0.24,
+        bodyY: -0.02,
+        leftArmRotX: 0.35,
+        leftArmRotZ: 0.55,
+        rightArmRotX: 0.35,
+        rightArmRotZ: -0.55,
+        leftSwordRotX: 0.05,
+        leftSwordRotZ: -0.35,
+        rightSwordRotX: 0.05,
+        rightSwordRotZ: 0.35,
+        wingSpread: 0.18,
+        wingFlapAmp: 0.05,
+        glowMul: 0.85,
       };
     default:
       return base;
@@ -337,7 +357,7 @@ function EmberParticles({
   );
 }
 
-export function BalDoXCharacter3D({ state = "idle" }: BalDoXCharacter3DProps) {
+export function BalDoXCharacter3D({ state = "idle", walkDirection = 1 }: BalDoXCharacter3DProps) {
   const bodyRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const wingsRef = useRef<THREE.Group>(null);
@@ -394,7 +414,7 @@ export function BalDoXCharacter3D({ state = "idle" }: BalDoXCharacter3DProps) {
     cp.glowMul = lerp(cp.glowMul, tp.glowMul, LERP);
 
     const breathe = Math.sin(t * 1.4 * speed) * 0.025;
-    const hover = Math.sin(t * 0.7) * 0.08;
+    const hover = state === "walking" ? 0 : Math.sin(t * 0.7) * 0.08;
     const glowPulse = (Math.sin(t * 1.4 * speed) * 0.5 + 0.5) * 0.25;
     const emissive = currentGlow.current * cp.glowMul * (1 + glowPulse);
 
@@ -402,7 +422,14 @@ export function BalDoXCharacter3D({ state = "idle" }: BalDoXCharacter3DProps) {
     if (helmetMatRef.current) helmetMatRef.current.emissiveIntensity = emissive;
 
     let walkCycle = 0;
-    if (state === "idle" || state === "organizing") {
+    let walkBob = 0;
+    let armSwing = 0;
+    if (state === "walking") {
+      walkPhaseRef.current += delta * 5.8;
+      walkCycle = Math.sin(walkPhaseRef.current);
+      walkBob = Math.abs(Math.sin(walkPhaseRef.current * 2)) * 0.05;
+      armSwing = walkCycle * 0.42;
+    } else if (state === "idle" || state === "organizing") {
       walkPhaseRef.current += delta * 1.8;
       walkCycle = Math.sin(walkPhaseRef.current);
     }
@@ -439,10 +466,11 @@ export function BalDoXCharacter3D({ state = "idle" }: BalDoXCharacter3DProps) {
 
     if (bodyRef.current) {
       const idleTurn = state === "idle" ? Math.sin(t * 0.35) * 0.12 : 0;
+      const walkFace = state === "walking" ? walkDirection * 0.55 : 0;
       bodyRef.current.rotation.x = cp.bodyRotX + breathe * 0.3;
-      bodyRef.current.rotation.y = cp.bodyRotY + scanRotY + idleTurn;
+      bodyRef.current.rotation.y = cp.bodyRotY + scanRotY + idleTurn + walkFace;
       bodyRef.current.rotation.z = cp.bodyRotZ + warningShake;
-      bodyRef.current.position.y = hover + cp.bodyY + breathe + successBounce;
+      bodyRef.current.position.y = hover + cp.bodyY + breathe + successBounce + walkBob;
       bodyRef.current.position.x = cp.bodyX;
     }
 
@@ -452,11 +480,11 @@ export function BalDoXCharacter3D({ state = "idle" }: BalDoXCharacter3DProps) {
     }
 
     if (leftArmRef.current) {
-      leftArmRef.current.rotation.x = cp.leftArmRotX + swordSwayL * 0.3;
+      leftArmRef.current.rotation.x = cp.leftArmRotX + swordSwayL * 0.3 - armSwing;
       leftArmRef.current.rotation.z = cp.leftArmRotZ;
     }
     if (rightArmRef.current) {
-      rightArmRef.current.rotation.x = cp.rightArmRotX + swordSwayR * 0.3;
+      rightArmRef.current.rotation.x = cp.rightArmRotX + swordSwayR * 0.3 + armSwing;
       rightArmRef.current.rotation.z = cp.rightArmRotZ;
     }
 
@@ -470,10 +498,12 @@ export function BalDoXCharacter3D({ state = "idle" }: BalDoXCharacter3DProps) {
     }
 
     if (leftLegRef.current) {
-      leftLegRef.current.rotation.x = cp.leftLegRotX + walkCycle * 0.18;
+      const legAmp = state === "walking" ? 0.42 : 0.18;
+      leftLegRef.current.rotation.x = cp.leftLegRotX + walkCycle * legAmp;
     }
     if (rightLegRef.current) {
-      rightLegRef.current.rotation.x = cp.rightLegRotX - walkCycle * 0.18;
+      const legAmp = state === "walking" ? 0.42 : 0.18;
+      rightLegRef.current.rotation.x = cp.rightLegRotX - walkCycle * legAmp;
     }
 
     const wingBaseZ = 0.3 + cp.wingSpread;

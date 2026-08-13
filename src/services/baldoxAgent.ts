@@ -1,13 +1,13 @@
+import type { AiConnectionMode } from "../types/baldox";
 import type { BalDoXKnowledge } from "../types/baldox";
 import { api } from "./apiService";
 import {
   buildActionPlan,
   buildKnowledgeSummary,
-  canAutoExecute,
-  getPersonalityResponse,
-  parseIntent,
-  tryOpenAiIntent,
+  interpretMessage,
 } from "./aiManager";
+import { isAnyLLMAvailable, isLocalLLMAvailable } from "./llmService";
+import { checkOllamaStatus } from "./ollamaService";
 import { executeBalDoXPlan } from "./planExecutor";
 import {
   addMessage,
@@ -16,10 +16,13 @@ import {
   getBalDoXContext,
   getBalDoXState,
   removeTypingIndicator,
+  setAiConnectionMode,
   setLastIntent,
   setNavigateTo,
   setPendingPlan,
   setProcessing,
+  setSecretaryActive,
+  updateMessageContent,
   updateContext,
 } from "../stores/baldoxStore";
 
@@ -56,6 +59,29 @@ export async function fetchBalDoXKnowledge(): Promise<BalDoXKnowledge> {
   return knowledge;
 }
 
+function resolveConnectionMode(
+  settings: {
+    baldox_ai_mode: string;
+    baldox_openai_key: string;
+    baldox_ollama_url?: string;
+    baldox_secretary_active?: boolean;
+  },
+  interpretationSource: "llm" | "local_llm" | "local",
+  llmFailed: boolean,
+): AiConnectionMode {
+  if (interpretationSource === "local_llm") return "local_llm";
+  if (interpretationSource === "llm" && !llmFailed) return "online";
+
+  const online = settings.baldox_ai_mode === "online" || settings.baldox_ai_mode === "openai";
+  if (online && settings.baldox_openai_key.trim() && llmFailed) return "offline";
+
+  if (isLocalLLMAvailable(settings.baldox_ai_mode) && interpretationSource === "local") {
+    return "local";
+  }
+
+  return "local";
+}
+
 export async function processBalDoXMessage(
   text: string,
   onNavigate?: (path: string) => void,
@@ -73,7 +99,14 @@ export async function processBalDoXMessage(
       auto_clean_temp: false,
       baldox_ai_mode: "local",
       baldox_openai_key: "",
+      baldox_llm_model: "gpt-4o-mini",
+      baldox_llm_base_url: "https://api.openai.com/v1",
+      baldox_ollama_url: "http://127.0.0.1:11434",
+      baldox_ollama_model: "llama3.2",
+      baldox_secretary_active: true,
     }));
+
+    setSecretaryActive(settings.baldox_secretary_active ?? true);
 
     const context = getBalDoXContext();
     const { pendingPlan } = getBalDoXState();
@@ -89,53 +122,98 @@ export async function processBalDoXMessage(
 
     const knowledge = await fetchBalDoXKnowledge();
 
-    let intentResult = parseIntent(trimmed, context.lastIntent);
-    if (settings.baldox_ai_mode === "openai" && settings.baldox_openai_key) {
-      const llmResult = await tryOpenAiIntent(trimmed, settings.baldox_openai_key);
-      if (llmResult && llmResult.confidence > intentResult.confidence) {
-        intentResult = llmResult;
-      }
+    let streamingMsgId: string | null = null;
+    let llmFailed = false;
+    let interpretation;
+
+    const useStreaming = isAnyLLMAvailable(
+      settings.baldox_openai_key ?? "",
+      settings.baldox_ai_mode ?? "local",
+    );
+
+    try {
+      interpretation = await interpretMessage(trimmed, {
+        apiKey: settings.baldox_openai_key ?? "",
+        aiMode: settings.baldox_ai_mode ?? "local",
+        personality: settings.baldox_personality,
+        knowledge,
+        contextIntent: context.lastIntent,
+        llmModel: settings.baldox_llm_model ?? "gpt-4o-mini",
+        llmBaseUrl: settings.baldox_llm_base_url ?? "https://api.openai.com/v1",
+        ollamaUrl: settings.baldox_ollama_url ?? "http://127.0.0.1:11434",
+        ollamaModel: settings.baldox_ollama_model ?? "llama3.2",
+        onReplyToken: useStreaming
+          ? (partial) => {
+              if (!streamingMsgId) {
+                removeTypingIndicator(typingId);
+                const msg = addMessage({ role: "assistant", content: partial, messageType: "text" });
+                streamingMsgId = msg.id;
+              } else {
+                updateMessageContent(streamingMsgId, partial);
+              }
+            }
+          : undefined,
+      });
+    } catch {
+      llmFailed = true;
+      interpretation = await interpretMessage(trimmed, {
+        apiKey: "",
+        aiMode: "local",
+        personality: settings.baldox_personality,
+        knowledge,
+        contextIntent: context.lastIntent,
+      });
     }
 
-    const { intent, entities, confidence } = intentResult;
-    setLastIntent(intent, trimmed);
+    const mode = resolveConnectionMode(settings, interpretation.source, llmFailed);
+    setAiConnectionMode(mode);
 
-    const response = getPersonalityResponse(intent, settings.baldox_personality, knowledge);
+    const { intent, entities, confidence, reply, suggestedActions, isGeneralQuestion } = interpretation;
+    setLastIntent(intent, trimmed);
     removeTypingIndicator(typingId);
 
-    if (intent === "GENERAL_HELP" || intent === "DIAGNOSE") {
-      const facts = buildKnowledgeSummary(knowledge);
+    const showDiskStats = intent === "DIAGNOSE" || (intent === "GENERAL_HELP" && knowledge.dashboard);
+    const finalReply =
+      intent === "DIAGNOSE"
+        ? `${reply}\n\n${buildKnowledgeSummary(knowledge)}`
+        : reply;
+
+    if (streamingMsgId) {
+      updateMessageContent(streamingMsgId, finalReply);
+    } else {
       addMessage({
         role: "assistant",
-        content: intent === "DIAGNOSE" ? `${response}\n\n${facts}` : response,
-        messageType: intent === "DIAGNOSE" ? "disk_stats" : "text",
-        diskStats: knowledge.dashboard ? [knowledge.dashboard.storage] : undefined,
+        content: finalReply,
+        messageType: showDiskStats ? "disk_stats" : "text",
+        diskStats: showDiskStats && knowledge.dashboard ? [knowledge.dashboard.storage] : undefined,
       });
-    } else {
-      addMessage({ role: "assistant", content: response, messageType: "text" });
+    }
+
+    if (isGeneralQuestion && intent === "GENERAL_HELP") {
+      await api.logConversation(trimmed, finalReply, intent).catch(() => {});
+      return;
     }
 
     const plan = buildActionPlan(intent, trimmed, entities);
     if (plan.tier === "blocked" || plan.steps.length === 0) {
-      if (intent === "UNKNOWN") {
-        await api.logConversation(trimmed, response, intent).catch(() => {});
+      if (intent === "UNKNOWN" && suggestedActions.length === 0) {
+        await api.logConversation(trimmed, finalReply, intent).catch(() => {});
       }
       return;
     }
 
-    const autoRun =
-      canAutoExecute(plan.tier, settings, intent, plan) ||
-      (confirmMatch && getBalDoXContext().sessionConfirmedPlanId === plan.id);
+    const sessionConfirmed =
+      confirmMatch && getBalDoXContext().sessionConfirmedPlanId === plan.id;
 
-    if (plan.tier === "review" && !autoRun && !confirmMatch) {
+    if (!sessionConfirmed) {
       setPendingPlan(plan);
       addMessage({
         role: "assistant",
-        content: `Preparei um plano de ação (confiança ${Math.round(confidence * 100)}%). Revise abaixo — diga "confirmo" para executar.`,
+        content: `Preparei um plano de ação (confiança ${Math.round(confidence * 100)}%). Quer que eu faça isso? Revise abaixo e confirme.`,
         messageType: "action_plan",
         plan,
       });
-      await api.logConversation(trimmed, response, intent).catch(() => {});
+      await api.logConversation(trimmed, finalReply, intent).catch(() => {});
       return;
     }
 
@@ -145,9 +223,10 @@ export async function processBalDoXMessage(
     }
 
     await executeBalDoXPlan(plan, onNavigate);
-    await api.logConversation(trimmed, response, intent).catch(() => {});
+    await api.logConversation(trimmed, finalReply, intent).catch(() => {});
   } catch (err) {
     removeTypingIndicator(typingId);
+    setAiConnectionMode("offline");
     addMessage({
       role: "assistant",
       content: `Comandante, encontrei um obstáculo: ${err instanceof Error ? err.message : String(err)}`,
@@ -155,5 +234,34 @@ export async function processBalDoXMessage(
     });
   } finally {
     setProcessing(false);
+  }
+}
+
+export async function refreshAiConnectionStatus(): Promise<AiConnectionMode> {
+  try {
+    const settings = await api.getSettings();
+
+    setSecretaryActive(settings.baldox_secretary_active ?? true);
+
+    if (isLocalLLMAvailable(settings.baldox_ai_mode ?? "local")) {
+      const status = await checkOllamaStatus(settings.baldox_ollama_url ?? "http://127.0.0.1:11434");
+      if (status.available) {
+        setAiConnectionMode("local_llm");
+        return "local_llm";
+      }
+      setAiConnectionMode("local");
+      return "local";
+    }
+
+    if (isAnyLLMAvailable(settings.baldox_openai_key ?? "", settings.baldox_ai_mode ?? "local")) {
+      setAiConnectionMode("online");
+      return "online";
+    }
+
+    setAiConnectionMode("local");
+    return "local";
+  } catch {
+    setAiConnectionMode("local");
+    return "local";
   }
 }
